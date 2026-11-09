@@ -23,7 +23,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="et" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+  {children}
+  <footer className="border-t border-stone-200 bg-[#F7F4EE] px-4 py-3 text-center text-xs text-[#344B3E]">
+    © 2026 KoduStuudio · Virtuaalne sisustusnõustaja · Õppeprojekt
+  </footer>
+</body>
     </html>
   );
 }
