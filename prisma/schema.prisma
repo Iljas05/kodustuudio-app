@@ -1,0 +1,72 @@
+// KoduStuudio database schema (Railway PostgreSQL).
+// The 96 interior design tips are NOT stored here - they live in data/*.csv.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// How a system prompt changes the mock AI reply format.
+// NONE = demo/custom prompt, shown in the UI but does not change replies.
+enum PromptStyle {
+  SHORT
+  DETAILED
+  BEGINNER
+  NONE
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model SystemPrompt {
+  id        String      @id @default(cuid())
+  // Stable identifier for built-in prompts so the seed can upsert them. Null for custom prompts.
+  key       String?     @unique
+  name      String
+  content   String
+  style     PromptStyle @default(NONE)
+  isBuiltIn Boolean     @default(false)
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  sessions ChatSession[]
+}
+
+model ChatSession {
+  id           String   @id @default(cuid())
+  title        String   @default("Uus vestlus")
+  // Simulated settings - saved and displayed only, they do not call a real model.
+  model        String   @default("GPT-4")
+  temperature  Float    @default(0.7)
+  topP         Float    @default(1.0)
+  systemPromptId String?
+  systemPrompt   SystemPrompt? @relation(fields: [systemPromptId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([updatedAt])
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String
+  // Attachment METADATA only. File contents are never uploaded or stored.
+  attachmentName String?
+  attachmentType String?
+  attachmentSize Int?
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId, createdAt])
+}
